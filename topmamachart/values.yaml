@@ -1,0 +1,53 @@
+# Default values for topmamachart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: 563402047835.dkr.ecr.eu-west-2.amazonaws.com/topmama
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+serviceAccount:
+  create: true
+service:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  type: ClusterIP
+  port: 9000
+  targetPort: 9009
+ingress:
+  enabled: true
+  className: "alb"
+  annotations: 
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTP": 9000}]'
+  hosts:
+    - host: topmama.grycare.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: gc-dashboard
+              port:
+                number: 9000
+  tls: []
+livenessProbe:
+  initialDelaySeconds: 60
+  port: 9009
+readinessProbe:
+  initialDelaySeconds: 60
+  port: 9009
+resources: {}
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
